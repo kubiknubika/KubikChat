@@ -1,0 +1,44 @@
+name: Release Go Server
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            asset_name: KubikChat-Linux
+          - os: windows
+            arch: amd64
+            asset_name: KubikChat-Windows.exe
+          - os: darwin
+            arch: amd64
+            asset_name: KubikChat-macOS
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        run: |
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o ${{ matrix.asset_name }} .
+
+      - name: Upload binaries to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ matrix.asset_name }}
